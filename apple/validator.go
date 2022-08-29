@@ -15,6 +15,8 @@ import (
 const (
 	// ValidationURL is the endpoint for verifying tokens
 	ValidationURL string = "https://appleid.apple.com/auth/token"
+	// ValidationURL is the endpoint for verifying tokens
+	RevokeTokensURL string = "https://appleid.apple.com/auth/revoke"
 	// ContentType is the one expected by Apple
 	ContentType string = "application/x-www-form-urlencoded"
 	// UserAgent is required by Apple or the request will fail
@@ -32,14 +34,16 @@ type ValidationClient interface {
 
 // Client implements ValidationClient
 type Client struct {
-	validationURL string
-	client        *http.Client
+	validationURL   string
+	revokeTokensURL string
+	client          *http.Client
 }
 
 // New creates a Client object
 func New() *Client {
 	client := &Client{
-		validationURL: ValidationURL,
+		validationURL:   ValidationURL,
+		revokeTokensURL: RevokeTokensURL,
 		client: &http.Client{
 			Timeout: 5 * time.Second,
 		},
@@ -90,6 +94,23 @@ func (c *Client) VerifyRefreshToken(ctx context.Context, reqBody ValidationRefre
 	data.Set("grant_type", "refresh_token")
 
 	return doRequest(ctx, c.client, &result, c.validationURL, data)
+}
+
+// https://developer.apple.com/documentation/sign_in_with_apple/revoke_tokens
+func (c *Client) RevokeTokens(ctx context.Context, reqBody RevokeTokensRequest) {
+	data := url.Values{}
+	data.Set("client_id", reqBody.ClientID)
+	data.Set("client_secret", reqBody.ClientSecret)
+	if reqBody.AccessToken != "" {
+		data.Set("token", reqBody.AccessToken)
+		data.Set("token_type_hint", "access_token")
+		doRequest(ctx, c.client, nil, c.revokeTokensURL, data)
+	}
+	if reqBody.RefreshToken != "" {
+		data.Set("token", reqBody.RefreshToken)
+		data.Set("token_type_hint", "refresh_token")
+		doRequest(ctx, c.client, nil, c.revokeTokensURL, data)
+	}
 }
 
 // GetUniqueID decodes the id_token response and returns the unique subject ID to identify the user

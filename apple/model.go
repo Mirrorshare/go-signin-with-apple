@@ -65,7 +65,7 @@ type ValidationResponse struct {
 
 	// Used to capture any error returned by the endpoint. Do not trust the response if this error is not nil
 	Error string `json:"error"`
-	
+
 	// A more detailed precision about the current error.
 	ErrorDescription string `json:"error_description"`
 }
@@ -86,4 +86,12 @@ type RefreshResponse struct {
 
 	// A more detailed precision about the current error.
 	ErrorDescription string `json:"error_description"`
+}
+
+// https://developer.apple.com/documentation/sign_in_with_apple/revoke_tokens
+type RevokeTokensRequest struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
