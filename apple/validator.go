@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -159,5 +160,9 @@ func doRequest(ctx context.Context, client *http.Client, result interface{}, url
 
 	defer res.Body.Close()
 
-	return json.NewDecoder(res.Body).Decode(result)
+	err = json.NewDecoder(res.Body).Decode(result)
+	if err == io.EOF {
+		return nil
+	}
+	return err
 }
