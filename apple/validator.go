@@ -97,20 +97,28 @@ func (c *Client) VerifyRefreshToken(ctx context.Context, reqBody ValidationRefre
 }
 
 // https://developer.apple.com/documentation/sign_in_with_apple/revoke_tokens
-func (c *Client) RevokeTokens(ctx context.Context, reqBody RevokeTokensRequest) {
+func (c *Client) RevokeTokens(ctx context.Context, reqBody RevokeTokensRequest) []error {
 	data := url.Values{}
 	data.Set("client_id", reqBody.ClientID)
 	data.Set("client_secret", reqBody.ClientSecret)
+	var errors []error
 	if reqBody.AccessToken != "" {
 		data.Set("token", reqBody.AccessToken)
 		data.Set("token_type_hint", "access_token")
-		doRequest(ctx, c.client, nil, c.revokeTokensURL, data)
+		err := doRequest(ctx, c.client, nil, c.revokeTokensURL, data)
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
 	if reqBody.RefreshToken != "" {
 		data.Set("token", reqBody.RefreshToken)
 		data.Set("token_type_hint", "refresh_token")
-		doRequest(ctx, c.client, nil, c.revokeTokensURL, data)
+		err := doRequest(ctx, c.client, nil, c.revokeTokensURL, data)
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
+	return errors
 }
 
 // GetUniqueID decodes the id_token response and returns the unique subject ID to identify the user
